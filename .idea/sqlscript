@@ -1,0 +1,87 @@
+CREATE DATABASE bookshop;
+\c bookshop;
+
+-- Таблица ролей
+CREATE TABLE Roles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE
+);
+
+-- Таблица пользователей
+CREATE TABLE Users (
+    id SERIAL PRIMARY KEY,
+    roleId INTEGER NOT NULL,
+    fullName VARCHAR(255) NOT NULL,
+    login VARCHAR(100) NOT NULL UNIQUE,
+    passwordHash VARCHAR(255) NOT NULL,
+    FOREIGN KEY (roleId) REFERENCES Roles(id)
+);
+
+-- Таблица категорий
+CREATE TABLE Categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL UNIQUE
+);
+
+-- Таблица производителей
+CREATE TABLE Manufacturers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL UNIQUE
+);
+
+-- Таблица поставщиков
+CREATE TABLE Suppliers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(200) NOT NULL UNIQUE
+);
+
+-- Таблица единиц измерения
+CREATE TABLE Units (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(20) NOT NULL UNIQUE
+);
+
+-- Таблица товаров
+CREATE TABLE Products (
+    id SERIAL PRIMARY KEY,
+    categoryId INTEGER NOT NULL,
+    manufacturerId INTEGER NOT NULL,
+    supplierId INTEGER NOT NULL,
+    unitId INTEGER NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+    discount DECIMAL(5, 2) DEFAULT 0 CHECK (discount >= 0 AND discount <= 100),
+    quantity INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
+    imagePath VARCHAR(500),
+    FOREIGN KEY (categoryId) REFERENCES Categories(id),
+    FOREIGN KEY (manufacturerId) REFERENCES Manufacturers(id),
+    FOREIGN KEY (supplierId) REFERENCES Suppliers(id),
+    FOREIGN KEY (unitId) REFERENCES Units(id)
+);
+
+-- Заполнение данными
+INSERT INTO Roles (name) VALUES ('Гость'), ('Клиент'), ('Менеджер'), ('Администратор');
+
+INSERT INTO Units (name) VALUES ('шт'), ('кг'), ('л');
+
+INSERT INTO Users (roleId, fullName, login, passwordHash) 
+VALUES 
+    (4, 'Администратор Системы', 'admin', MD5('admin')),
+    (3, 'Менеджер Магазина', 'manager', MD5('manager')),
+    (2, 'Иван Петров', 'client', MD5('client'));
+
+INSERT INTO Categories (name) VALUES ('Программирование'), ('Фантастика'), ('Детектив');
+
+INSERT INTO Manufacturers (name) VALUES ('Питер'), ('Эксмо'), ('АСТ');
+
+INSERT INTO Suppliers (name) VALUES ('ООО "Книготорг"'), ('ООО "БукМаркет"');
+
+INSERT INTO Products (categoryId, manufacturerId, supplierId, unitId, name, description, price, discount, quantity)
+VALUES 
+    (1, 1, 1, 1, 'Java. Полное руководство', 'Полное руководство по Java', 1500.00, 10, 50),
+    (1, 1, 1, 1, 'Spring Boot в действии', 'Практическое руководство по Spring Boot', 1200.00, 0, 30),
+    (2, 2, 2, 1, 'Властелин колец', 'Эпическая фэнтези-сага', 800.00, 30, 0),
+    (3, 3, 1, 1, 'Убийство в Восточном экспрессе', 'Классический детектив Агаты Кристи', 600.00, 5, 15);
+
+\q
