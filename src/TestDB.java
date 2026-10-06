@@ -10,9 +10,9 @@ public class TestDB {
                 "postgres",
                 "12345"
             );
-            System.out.println("✅ Подключение к БД УСПЕШНО!");
+            System.out.println("Подключение к БД !");
             
-            // Проверяем пользователей
+
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT login, fullName FROM Users");
             System.out.println("Пользователи в БД:");

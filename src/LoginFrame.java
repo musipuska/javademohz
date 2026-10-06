@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.sql.*;
 
 public class LoginFrame extends JFrame {
@@ -9,18 +7,20 @@ public class LoginFrame extends JFrame {
     private JPasswordField passwordField;
 
     public LoginFrame() {
-        setTitle("Авторизация - ЧитайГород");
+        setTitle("Авторизация — ЧитайГород");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 300);
+        setSize(420, 320);
         setLocationRelativeTo(null);
         setLayout(new GridBagLayout());
+        getContentPane().setBackground(Color.WHITE);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(10, 10, 10, 10);
 
-        // Заголовок
-        JLabel titleLabel = new JLabel("Добро пожаловать в ЧитайГород!");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        // Логотип/заголовок
+        JLabel titleLabel = new JLabel("ЧитайГород");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 22));
+        titleLabel.setForeground(new Color(0x23, 0xE1, 0xEF));
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
@@ -45,7 +45,14 @@ public class LoginFrame extends JFrame {
 
         // Кнопки
         JButton loginButton = new JButton("Войти");
+        loginButton.setBackground(new Color(0x23, 0xE1, 0xEF));
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setFont(new Font("Arial", Font.BOLD, 13));
+        loginButton.setFocusPainted(false);
+
         JButton guestButton = new JButton("Войти как гость");
+        guestButton.setBackground(Color.LIGHT_GRAY);
+        guestButton.setFocusPainted(false);
 
         gbc.gridy = 3;
         gbc.gridx = 0;
@@ -53,21 +60,10 @@ public class LoginFrame extends JFrame {
         gbc.gridx = 1;
         add(guestButton, gbc);
 
-        // Обработчики
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                authenticateUser();
-            }
-        });
+        loginButton.addActionListener(e -> authenticateUser());
+        guestButton.addActionListener(e -> openProductList(null));
 
-        guestButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                openProductList(null);
-            }
-        });
-
+        getRootPane().setDefaultButton(loginButton);
         setVisible(true);
     }
 
@@ -76,11 +72,14 @@ public class LoginFrame extends JFrame {
         String password = new String(passwordField.getPassword());
 
         if (login.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Введите логин и пароль!", "Ошибка", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Введите логин и пароль!",
+                    "Ошибка ввода",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String query = "SELECT * FROM Users WHERE login = ? AND passwordHash = MD5(?)";
+        String query = "SELECT id, roleId, fullName, login FROM Users WHERE login = ? AND passwordHash = MD5(?)";
 
         try (PreparedStatement pstmt = DatabaseConnection.getConnection().prepareStatement(query)) {
             pstmt.setString(1, login);
@@ -92,25 +91,29 @@ public class LoginFrame extends JFrame {
                         rs.getInt("id"),
                         rs.getInt("roleId"),
                         rs.getString("fullName"),
-                        rs.getString("login"),
-                        rs.getString("passwordHash")
+                        rs.getString("login")
                 );
-                JOptionPane.showMessageDialog(this, "Добро пожаловать, " + user.getFullName() + "!");
+                JOptionPane.showMessageDialog(this,
+                        "Добро пожаловать, " + user.getFullName() + "!",
+                        "Успешный вход",
+                        JOptionPane.INFORMATION_MESSAGE);
                 openProductList(user);
             } else {
-                JOptionPane.showMessageDialog(this, "Неверный логин или пароль!", "Ошибка", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this,
+                        "Неверный логин или пароль!\nПроверьте раскладку клавиатуры.",
+                        "Ошибка авторизации",
+                        JOptionPane.ERROR_MESSAGE);
             }
         } catch (SQLException e) {
-            JOptionPane.showMessageDialog(this, "Ошибка БД: " + e.getMessage(), "Ошибка", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Ошибка подключения к БД:\n" + e.getMessage(),
+                    "Ошибка",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void openProductList(User user) {
         new ProductListFrame(user).setVisible(true);
-        dispose(); // Закрываем окно авторизации
-    }
-
-    public static void main(String[] args) {
-        new LoginFrame();
+        dispose();
     }
 }
